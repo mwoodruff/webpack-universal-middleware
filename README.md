@@ -13,7 +13,7 @@ Check out the `examples` folder in the git repo for more details.
 Install along with webpack and express:
 
 ```
-> npm install --save-dev webpack-universal-server webpack express
+> npm install --save-dev webpack-universal-middleware webpack express
 ```
 
 Add your `webpack.config.js` file:
