@@ -6,28 +6,49 @@ const clientMiddleware = require('./lib/clientMiddleware');
 const path = require('path');
 
 module.exports = function (multiCompiler, options = {}) {
-
-	if (!options.reporter) {
-		options.reporter = Reporter(options);
-	}
-
-	if (!options.static) {
-		options.static = [
-			"./static"
-		]
-	} else if (typeof (options.static) !== "array") {
-		options.static = [options.static];
-	}
+	if (!Array.isArray(multiCompiler.compilers)) {
+    multiCompiler = { compilers: [multiCompiler] };
+  }
+  if (!options.reporter) {
+    options.reporter = Reporter(options);
+  }
+  if (!options.static) {
+    options.static = ['./static'];
+  } else if (!Array.isArray(options.static)) {
+    options.static = [options.static];
+  }
+  if (options.proxyTable !== Object(options.proxyTable)) {
+    options.proxyTable = {};
+  }
 
 	const app = Router();
+	options.static = options.static.filter(item => {
+    let realPath;
+    let virtualPath;
+    if (item === Object(item) && is.string(item.virtualPath) && is.string(item.realPath)) {
+      realPath = path.resolve(item.realPath);
+      virtualPath = item.virtualPath;
+      app.use(virtualPath, express.static(realPath));
+    } else if (is.string(item)) {
+      realPath = path.resolve(item);
+      app.use(express.static(realPath));
+    }
+    return (virtualPath || realPath) && { virtualPath, realPath };
+  });
 
-	options.static.forEach(p => {
-		var dir = path.resolve(p);
-
-		if (p) {
-			app.use(Express.static("static"))
-		}
-	})
+  Object.keys(options.proxyTable).forEach(context => {
+    const target = options.proxyTable[context];
+    if (is.string(target)) {
+      target = { target };
+    }
+    if (target.virtualPath) {
+      const virtualPath = target.virtualPath;
+      delete target.virtualPath;
+      app.use(virtualPath, httpProxy(target.filter || context, target));
+    } else {
+      app.use(httpProxy(target.filter || context, target));
+    }
+  });
 
 	for (let compiler of multiCompiler.compilers) {
 
@@ -48,4 +69,4 @@ module.exports = function (multiCompiler, options = {}) {
 	}
 
 	return app;
-}
+};
