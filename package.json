@@ -1,6 +1,6 @@
 {
   "name": "webpack-universal-middleware",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Express middleware for running multiple client and server webpack bundles together. Supports hot-loading or reloading server code.",
   "keywords": [
     "webpack",
